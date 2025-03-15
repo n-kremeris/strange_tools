@@ -13,7 +13,7 @@
 # recovery shell that was needed to mount the rootfs but was missing inside
 # the generated initramfs due to an oversight, with no backup being available
 # in /boot and no other access to the machine other than an extremely limited
-# cloud IPMI shell via a web browser.
+# cloud IPMI shell via a web browser (shell-in-a-box)
 
 # PREREQUISITES
 # 1. a graphical environment
@@ -85,6 +85,12 @@ xdotool type "rm -rf $FILE"
 xdotool key Return
 sleep $SIGNAL_DELAY
 
+# disable wraparound in terminal - allows faster transfers and less lag
+# when target is shell-in-a-box
+xdotool type "echo -ne '\\e[?7l'"
+xdotool key Return
+sleep $SIGNAL_DELAY
+
 # read hexdump in chunks and type it out on the target window
 while IFS= read -r -n "$CHUNKSIZE" CHUNK || [[ -n "$CHUNK" ]]; do
     echo "SENDING: $CHUNK"
@@ -93,6 +99,11 @@ while IFS= read -r -n "$CHUNKSIZE" CHUNK || [[ -n "$CHUNK" ]]; do
     xdotool key Return
     sleep $SIGNAL_DELAY
 done < hexdump
+
+# re-enable wraparound
+xdotool type "echo -ne '\\e[?7h'"
+xdotool key Return
+sleep $SIGNAL_DELAY
 
 # check md5sum of transfered file against the source
 SUM=$(md5sum $FILE | awk '{ print $1 }')
